@@ -1,0 +1,1 @@
+@gcc main.c sqlite3.o printcolor.o -o main.exe
