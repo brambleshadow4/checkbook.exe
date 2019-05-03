@@ -434,9 +434,19 @@ void commandEdit()
             offset++;
             refresh = 1;
         }
+        else if(key == KEYCODE_PGUP && offset+20 < maxTransactions)
+        {
+            offset += 20;
+            refresh = 1;
+        }
         else if (key == KEYCODE_DOWNARROW && offset != 0)
         {
             offset--;
+            refresh = 1;
+        }
+        else if(key == KEYCODE_PGDOWN && offset-20 >=0)
+        {
+            offset -= 20;
             refresh = 1;
         }
         else if(key == KEYCODE_ENTER)
@@ -1073,7 +1083,7 @@ int print_money_length(long long amount)
     }
 
     amount = amount / 1000;
-    
+
     while(amount != 0)
     {
         amount /= 10;
