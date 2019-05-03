@@ -1065,20 +1065,21 @@ void print_money_highlight(int amount)
 
 int print_money_length(long long amount)
 {
-    int length = 2;
+    int length = 5;
     if(amount < 0)
     {
         amount *= -1;
         length++;
     }
 
+    amount = amount / 1000;
+    
     while(amount != 0)
     {
         amount /= 10;
         length++;
     }
-    if(length < 5)
-        length = 5;
+    
     return length;
 }
 
