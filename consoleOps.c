@@ -11,6 +11,7 @@ const int KEYCODE_ENTER = 13;
 const int KEYCODE_ESCAPE = 27;
 const int KEYCODE_BACKSPACE = 9;
 const int KEYCODE_D = 68;
+const int KEYCODE_V = 86;
 const int KEYCODE_DELETE = 46;
 
 

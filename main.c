@@ -13,6 +13,8 @@ int main()
 {
     sqlite3_open("finances.db", &db);
 
+    //sqlite3_exec(db, "ALTER TABLE transactions ADD verified tinyint;", null, null, null);
+
     sqlite3_exec(db,
         "CREATE TABLE accounts ( "
         "ID INTEGER PRIMARY KEY, "
@@ -28,7 +30,8 @@ int main()
         "account INTEGER, "
         "amount bigint, "
         "date varchar(255), "
-        "message varchar(255))",
+        "message varchar(255),"
+        "verified tinyint)",
         null, null, null
     );
 
@@ -392,14 +395,14 @@ void commandEdit()
     int transactionId = -1;
     int i = 0;
 
-    int refresh = 1;
+    int refresh = 1; //set to 2 if need to refresh from database.
 
     short isDeleting = 0;
 
     char sql[240];
     while(1)
     {
-        if(offset < loaded || offset >= loaded + 20)
+        if(offset < loaded || offset >= loaded + 20 || refresh == 2)
         {
             loaded = offset - (offset % 20);
 
@@ -464,6 +467,25 @@ void commandEdit()
             isDeleting = 1;
             break;
         }
+        // Toggle whether a transaction is verified.
+        else if(key == KEYCODE_V)
+        {
+            //flip the verified bit
+            int flag = transactions[offset-loaded]->verified; 
+            flag = (1-flag) & 1;
+            transactions[offset-loaded]->verified = flag;
+
+            //update the database
+            char sql[2000] = "\0";
+            sprintf(sql, "UPDATE transactions SET verified=%i WHERE ID=%i",
+                flag,
+                transactions[offset-loaded]->id
+            );
+
+            sqlite3_exec(db, sql, null, null, null);
+
+            refresh = 1;
+        }
     }
 
     if(isDeleting)
@@ -505,7 +527,8 @@ void commandEdit()
         }
     }
     else
-    {
+    {   
+        // Update code
         while(1)
         {
             struct account* newAccount  = getAccountWithName(arg);
@@ -536,7 +559,7 @@ void commandEdit()
             char sql[2000] = "\0";
             char* sqlHead = sql;
             //account=%i, amount=%lld, date='%s', message='%s'
-            sprintf(sql, "UPDATE transactions SET account='%i', amount='%li', date='%s', message='%s' WHERE ID=%i",
+            sprintf(sql, "UPDATE transactions SET account='%i', amount='%li', date='%s', message='%s', verified='%s' WHERE ID=%i",
                 newAccount->id,
                 newMoney,
                 newDate,
@@ -835,6 +858,7 @@ int genericCallback(void* k, int cols, char** values, char** colNames)
 }
 
 
+// for requests like
 int loadTransactionsCallback(void* row, int cols, char** values, char** colNames)
 {
     //printf("callback %i\r\n", cols);
@@ -846,6 +870,7 @@ int loadTransactionsCallback(void* row, int cols, char** values, char** colNames
     t->amount = atoll(values[2]);
     t->date = new_string_from_parts(1, values[3]);
     t->message = new_string_from_parts(1, values[4]);
+    t->verified = atoi(values[5]);
     transactions[*row2] = t;
     (*row2)++;
 
@@ -1015,6 +1040,17 @@ void print_transaction_table(int tableSize, int rowHighlight, long long* display
                 print_money(transactions[i]->cumulative);
             (*printfn)(" ");
         }
+
+        //print verified column
+
+        char* verifiedText = "  ";
+        if (transactions[i]->verified)
+            verifiedText = "\xFB ";
+
+        if (rowHighlight == i)
+            printf_highlight(verifiedText);
+        else
+            printf_yellow(verifiedText);
 
 
         //print message

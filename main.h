@@ -11,6 +11,7 @@ struct transaction {
     int id;
     int account;
     long amount;
+    int verified;
     char* date;
     char* message;
     long long cumulative;
