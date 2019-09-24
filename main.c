@@ -534,10 +534,7 @@ void commandEdit()
             struct account* newAccount  = getAccountWithName(arg);
 
             if(newAccount)
-            {
-                printf("switching to a new account!\n");
                 arg = next_arg();
-            }
             else
                 newAccount = oldAccount;
 
@@ -563,17 +560,15 @@ void commandEdit()
 
             char sql[2000] = "\0";
             char* sqlHead = sql;
-
-            //account=%i, amount=%lld, date='%s', message='%s'
-            sprintf(sql, "UPDATE transactions SET account='%i', amount='%li', date='%s', message='%s', verified='%s' WHERE ID=%i",
+            
+            sprintf(sql, "UPDATE transactions SET account='%i', amount='%li', date='%s', message='%s', verified=%i WHERE ID=%i",
                 newAccount->id,
                 newMoney,
                 newDate,
                 newMessage == null ? oldMsg : newMessage,
-                transactions[offset-loaded]-> verified,
+                transactions[offset-loaded]->verified,
                 transactionId
             );
-
 
             sqlite3_exec(db, sql, null, null, null);
 
