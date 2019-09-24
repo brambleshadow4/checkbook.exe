@@ -27,7 +27,7 @@ e.g.
 
 If you make a mistake, you can edit it after the fact using the `edit` command
 
-To view the last 20  transactions, type `last 20`. You can filter these to only
+To view the last 20 transactions, type `last 20`. You can filter these to only
 transactions for a specific account with `last 20 accountName`
 
 A neat short hand for transferring money between two accounts exists. Its syntax

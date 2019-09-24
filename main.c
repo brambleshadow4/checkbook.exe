@@ -534,7 +534,10 @@ void commandEdit()
             struct account* newAccount  = getAccountWithName(arg);
 
             if(newAccount)
+            {
+                printf("switching to a new account!\n");
                 arg = next_arg();
+            }
             else
                 newAccount = oldAccount;
 
@@ -552,18 +555,22 @@ void commandEdit()
                 arg = next_arg();
 
 
-            int freeMessage = 0;
-            char* newMessage = makeStringDBSafe(arg, &freeMessage);
+            int freeNewMessage= 0;
+            char* newMessage = makeStringDBSafe(arg, &freeNewMessage);
 
+            int freeOldMessage= 0;
+            oldMsg = makeStringDBSafe(oldMsg, &freeOldMessage);
 
             char sql[2000] = "\0";
             char* sqlHead = sql;
+
             //account=%i, amount=%lld, date='%s', message='%s'
             sprintf(sql, "UPDATE transactions SET account='%i', amount='%li', date='%s', message='%s', verified='%s' WHERE ID=%i",
                 newAccount->id,
                 newMoney,
                 newDate,
                 newMessage == null ? oldMsg : newMessage,
+                transactions[offset-loaded]-> verified,
                 transactionId
             );
 
@@ -573,8 +580,11 @@ void commandEdit()
             oldAccount->value -= oldMoney;
             newAccount->value += newMoney;
 
-            if(freeMessage)
+            if(freeNewMessage)
                 free(newMessage);
+
+            if(freeOldMessage)
+                free(oldMsg);
 
             if(oldAccount != newAccount)
             {
@@ -584,12 +594,13 @@ void commandEdit()
             else if(oldMoney != newMoney)
                 updateAccount = oldAccount;
 
-            //printf_magenta("%s",sql);
-            printf_green("Success!");
+            //printf_magenta("%s\n CODE %i\n", sql, sqlite3_errcode(db));
+            printf_green("Success!\n");
 
             break;
         }
     }
+
 
     //update total sums if money has been changed.
     if(updateAccount)
@@ -598,11 +609,13 @@ void commandEdit()
         sqlite3_exec(db, commandBuffer, null, null, null);
     }
 
+
     if(updateAccount2)
     {
         sprintf(commandBuffer, "UPDATE accounts SET value=%lld WHERE ID=%i\0\0", updateAccount2->value, updateAccount2->id);
         sqlite3_exec(db, commandBuffer, null, null, null);
     }
+
 
     //free all the transactions
     for(i=numberOfTransactions-1; i >=0; i--)
@@ -1062,21 +1075,19 @@ void print_transaction_table(int tableSize, int rowHighlight, long long* display
 
 void print_money(int amount)
 {
-    char cents[2];
-    cents[0] = '0';
-    cents[1] = '0';
+    char cents[3] = "00\n";
 
     int isNeg = 0;
-    if(amount <0)
+    if(amount < 0)
     {
         isNeg = 1;
         amount *= -1;
     }
 
     if(amount % 100 > 9)
-        itoa(amount % 100, cents, 10);
+        sprintf(cents, "%i", amount % 100);
     else
-        itoa(amount % 100, cents+1, 10);
+        sprintf(cents, "0%i", amount % 100);
 
     if(isNeg)
         printf_red("-$%lld.%s", amount/100, cents);
